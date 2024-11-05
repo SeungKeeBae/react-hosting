@@ -1,23 +1,21 @@
-import logo from './logo.svg';
-import './App.css';
+import { Unity, useUnityContext } from "react-unity-webgl";
 
 function App() {
+  const { unityProvider } = useUnityContext({
+    loaderUrl: "build/react-hosting.loader.js",
+    dataUrl: "build/react-hosting.data",
+    frameworkUrl: "build/react-hosting.framework.js",
+    codeUrl: "build/react-hosting.wasm",
+  });
+
   return (
     <div className="App">
       <header className="App-header">
-        <p>Free Hosting!!</p>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <h1>React / Unity Test</h1>
+        <Unity
+          unityProvider={unityProvider}
+          style={{ width: "1440px", height: "2560px" }}
+        />
       </header>
     </div>
   );
