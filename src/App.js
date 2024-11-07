@@ -18,7 +18,7 @@ function App() {
     postRequest(jsonData, handleError, handleCallback);
 });
 
-const postRequest = (json, OnError, callback) => {
+const postRequest = async (json, OnError, callback) => {
   // 비밀번호 추가
   const password = '1004';  // 비밀번호를 UGSettingObjectWrapper.ScriptPassword에 맞게 설정하세요.
   const jsonObject = JSON.parse(json);
@@ -28,7 +28,7 @@ const postRequest = (json, OnError, callback) => {
   const baseURL = 'https://script.google.com/macros/s/AKfycbyLKnYr9aV3NmQmdusHvdMTZ3y1m7mYMext9Ke1ofx44JdMVpt4eW7PdTr2nQiaEuQR/exec';  // 실제 URL로 바꿔주세요.
 
   try {
-    const response = fetch(baseURL, {
+    const response = await fetch(baseURL, {
       method: 'POST',
       redirect: 'follow',
       headers: {
@@ -42,16 +42,27 @@ const postRequest = (json, OnError, callback) => {
     }
 
     // JSON 응답 처리
-    const responseData = response.json().then(res => res.json()).then(res => {
-      console.log(res);
-      sendMessage("UnityPlayerWebRequest", "RecieveUnity", res)
-    }, [sendMessage]);
-    
+    const responseData = await response.json();
+
+    // 콜백 함수 호출
+    callback(responseData);
   } catch (error) {
     // 오류 처리
-    sendMessage("UnityPlayerWebRequest", "RecieveUnity", error)
+    OnError(error);
   }
 };
+
+  // 요청을 보낼 때 호출될 콜백 함수
+  const handleCallback = ((responseData) => {
+    console.log(responseData);
+    sendMessage("UnityPlayerWebRequest", "RecieveUnity", responseData)
+  }, [sendMessage]);
+
+  // 오류를 처리할 함수
+  const handleError = ((error) => {
+    console.log(error.message);
+    sendMessage("UnityPlayerWebRequest", "RecieveUnity", data)
+  }, [sendMessage]);
 
 useEffect(() => {
     if (unityProvider) {
