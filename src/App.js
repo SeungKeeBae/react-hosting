@@ -13,19 +13,56 @@ function App() {
     frameworkUrl: "build/react-hosting.framework.js",
     codeUrl: "build/react-hosting.wasm",
   });
+  
   const sendToken = useCallback((url, jsonData) => {
-    fetch(url, {
-      method : "POST",          //메소드 지정
-      headers : {               //데이터 타입 지정
-          "Content-Type":"application/json; charset=utf-8"
+    jsonData.preventDefault();
+    postRequest(jsonData, handleError, handleCallback);
+});
+
+const postRequest = async (json, OnError, callback) => {
+  // 비밀번호 추가
+  const password = '1004';  // 비밀번호를 UGSettingObjectWrapper.ScriptPassword에 맞게 설정하세요.
+  const jsonObject = JSON.parse(json);
+  jsonObject.password = password;
+  const updatedJson = JSON.stringify(jsonObject);
+
+  const baseURL = 'https://script.google.com/macros/s/AKfycbyLKnYr9aV3NmQmdusHvdMTZ3y1m7mYMext9Ke1ofx44JdMVpt4eW7PdTr2nQiaEuQR/exec';  // 실제 URL로 바꿔주세요.
+
+  try {
+    const response = await fetch(baseURL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(jsonData)   //실제 데이터 파싱하여 body에 저장
-        }).then(res=>res.json())        // 리턴값이 있으면 리턴값에 맞는 req 지정
-          .then(res=> {
-            console.log(res);
-            sendMessage('Trigger', 'RecieveUnity', res);        // 리턴값에 대한 처리
+      body: updatedJson,  // json 데이터를 본문에 포함시킴
     });
-}, [sendMessage]);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // JSON 응답 처리
+    const responseData = await response.json();
+
+    // 콜백 함수 호출
+    callback(responseData);
+  } catch (error) {
+    // 오류 처리
+    OnError(error);
+  }
+};
+
+  // 요청을 보낼 때 호출될 콜백 함수
+  const handleCallback = ((data) => {
+    console.log(data);
+    sendMessage("UnityPlayerWebRequest", "RecieveUnity", data)
+  }, [sendMessage]);
+
+  // 오류를 처리할 함수
+  const handleError = (error) => {
+    console.log(error.message);
+  };
 
 useEffect(() => {
     if (unityProvider) {
