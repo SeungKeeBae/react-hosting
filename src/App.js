@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useCallback } from "react";
 import { Unity, useUnityContext } from "react-unity-webgl";
 
 function App() {
@@ -13,27 +13,28 @@ function App() {
     frameworkUrl: "build/react-hosting.framework.js",
     codeUrl: "build/react-hosting.wasm",
   });
+  const sendToken = useCallback((url, jsonData) => {
+    fetch(url, {
+      method : "POST",          //메소드 지정
+      headers : {               //데이터 타입 지정
+          "Content-Type":"application/json; charset=utf-8"
+      },
+      body: JSON.stringify(jsonData)   //실제 데이터 파싱하여 body에 저장
+        }).then(res=>res.json())        // 리턴값이 있으면 리턴값에 맞는 req 지정
+          .then(res=> {
+            console.log(res);
+            sendMessage('Trigger', 'RecieveUnity', res);        // 리턴값에 대한 처리
+    });
+}, [sendMessage]);
 
-  const RequsetPost = useCallback((url, jsonData) => {
-    Answer(jsonData);
-  }, []);
-
-  useEffect(() => {
-    addEventListener("RequsetPost", RequsetPost);
-
-    return () => {
-      detachAndUnloadImmediate().catch((reason) => {
-        console.log(reason);
-      });
-      removeEventListener("RequsetPost", RequsetPost);
-    };
-  }, [
-    detachAndUnloadImmediate,
-    addEventListener,
-    removeEventListener,
-    setSpeedUp,
-    setSpeedDown,
-  ]);
+useEffect(() => {
+    if (unityProvider) {
+        addEventListener('reactRequsetPost', sendToken);
+        return () => {
+            removeEventListener('reactRequsetPost', sendToken);
+        };
+    }
+}, [unityProvider, sendToken, addEventListener, removeEventListener]);
 
   return (
     <div className="App">
