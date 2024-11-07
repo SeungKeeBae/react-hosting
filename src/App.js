@@ -6,7 +6,6 @@ function App() {
     sendMessage, // unity 함수를 호출하기 위한 sendMessage 추가
     addEventListener, // unity -> react 통신
     removeEventListener, // unity -> react 통신
-    UNSAFE__detachAndUnloadImmediate: detachAndUnloadImmediate,
    } = useUnityContext({
     loaderUrl: "build/react-hosting.loader.js",
     dataUrl: "build/react-hosting.data",
