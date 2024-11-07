@@ -13,56 +13,66 @@ function App() {
     codeUrl: "build/react-hosting.wasm",
   });
   
-  const sendToken = useCallback((url, jsonData) => {
-    jsonData.preventDefault();
+  const sendToken = useCallback((jsonData) => {
+    console.log("sendToken : ok");
+    console.log("jsonData : " + jsonData);
+
     postRequest(jsonData, handleError, handleCallback);
 });
 
 const postRequest = async (json, OnError, callback) => {
-  // 비밀번호 추가
   const password = '1004';  // 비밀번호를 UGSettingObjectWrapper.ScriptPassword에 맞게 설정하세요.
-  const jsonObject = JSON.parse(json);
-  jsonObject.password = password;
-  const updatedJson = JSON.stringify(jsonObject);
+  if (!json) {
+    OnError(new Error("!json : Invalid JSON input"));
+    return;
+  }
 
-  const baseURL = 'https://script.google.com/macros/s/AKfycbyLKnYr9aV3NmQmdusHvdMTZ3y1m7mYMext9Ke1ofx44JdMVpt4eW7PdTr2nQiaEuQR/exec';  // 실제 URL로 바꿔주세요.
-
+  let jsonObject;
+  try {
+    console.log(json)
+    jsonObject = JSON.parse(json);
+  } catch (error) {
+    OnError(new Error("JSON.parse(json); : Invalid JSON format"));
+    return;
+  }
+  const baseURL = 'https://script.google.com/macros/s/AKfycbyLKnYr9aV3NmQmdusHvdMTZ3y1m7mYMext9Ke1ofx44JdMVpt4eW7PdTr2nQiaEuQR/exec';
   try {
     const response = await fetch(baseURL, {
       method: 'POST',
-      redirect: 'follow',
+      redirect: "follow",
       headers: {
         'Content-Type': 'application/json',
       },
-      body: updatedJson,  // json 데이터를 본문에 포함시킴
+      body: json,
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    // JSON 응답 처리
-    const responseData = await response.json();
-
-    // 콜백 함수 호출
-    callback(responseData);
+    const responseText = await response.text();
+    try {
+      const responseData = JSON.parse(responseText);  // 응답을 JSON으로 변환
+      callback(responseData);
+    } catch (error) {
+      throw new Error("Response is not valid JSON");
+    }
   } catch (error) {
-    // 오류 처리
+    console.error("Error during POST request:", error);
     OnError(error);
   }
 };
 
   // 요청을 보낼 때 호출될 콜백 함수
-  const handleCallback = ((responseData) => {
-    console.log(responseData);
-    sendMessage("UnityPlayerWebRequest", "RecieveUnity", responseData)
-  }, [sendMessage]);
-
-  // 오류를 처리할 함수
-  const handleError = ((error) => {
-    console.log(error.message);
+  const handleCallback = (data) => {
+    console.log("data : " + data);
     sendMessage("UnityPlayerWebRequest", "RecieveUnity", data)
-  }, [sendMessage]);
+  }
+  // 오류를 처리할 함수
+  const handleError = (error) => {
+    console.log("error.message : " + error.message)
+    sendMessage("UnityPlayerWebRequest", "RecieveUnity", error)
+  }
 
 useEffect(() => {
     if (unityProvider) {
